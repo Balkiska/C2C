@@ -5,7 +5,7 @@
 - [x]  Déterminer l’objectif du Bonus (scénario→ exfiltration de fichier)
 -  Renseignements et Documentation techniques sur :
     - [x] LD_Preload
-    - [ ] linker
+    - [x] linker
     - [ ] types de threads et leur utilisation en c
     - [ ] memory ordering
 - [ ]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
