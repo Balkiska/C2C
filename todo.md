@@ -6,7 +6,7 @@
 -  Renseignements et Documentation techniques sur :
     - [x] LD_Preload
     - [x] linker
-    - [ ] types de threads et leur utilisation en c
+    - [x] types de threads et leur utilisation en c
     - [ ] memory ordering
 - [ ]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
 - [ ]  DOC PART 1
