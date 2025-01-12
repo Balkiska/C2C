@@ -4,7 +4,7 @@
 - [x]  Choisir un contexte dans ceux proposés ( cacher un fichier )
 - [x]  Déterminer l’objectif du Bonus (scénario→ exfiltration de fichier)
 -  Renseignements et Documentation techniques sur :
-    - [ ] LD_Preload
+    - [x] LD_Preload
     - [ ] linker
     - [ ] types de threads et leur utilisation en c
     - [ ] memory ordering
