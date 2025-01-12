@@ -3,7 +3,11 @@
 - [x]  Lire et comprendre les conditions de l'examen.
 - [x]  Choisir un contexte dans ceux proposés ( cacher un fichier )
 - [x]  Déterminer l’objectif du Bonus (scénario→ exfiltration de fichier)
-- [ ]  Renseignements et Documentation techniques ( LD_Preload , linker, types de threads et leur utilisation en c, memory ordering).
+-  Renseignements et Documentation techniques sur :
+    - [ ] LD_Preload
+    - [ ] linker
+    - [ ] types de threads et leur utilisation en c
+    - [ ] memory ordering
 - [ ]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
 - [ ]  DOC PART 1
 
@@ -11,7 +15,10 @@
 
 **Configurer l'environnement ( à ajouter au readme) :**
 
-- [ ]  Installer et configurer les outils nécessaires (GCC (version du compilateur), Valgrind, Thread Sanitizer).
+- Installer et configurer les outils nécessaires:
+    - [ ]  GCC (version du compilateur)
+    - [ ]  Valgrind
+    - [ ]  Thread Sanitizer
 - [ ]  Préparer un espace de travail structuré avec des fichiers `.c` séparés pour chaque module. + les définir
 - [ ]  Initialiser un dépôt Git.
 - [ ]  Ajouter un Makefile pour compiler et organiser facilement le code + flags de compilation .
