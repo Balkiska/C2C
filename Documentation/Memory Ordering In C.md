@@ -1,208 +1,213 @@
-Threads in C allow you to create **concurrent tasks** within a program. 
+# Memory Ordering in C
 
-Multithreading allows a program to perform multiple tasks concurrently, enhancing performance, especially on multi-core systems. Threads within the same process share resources such as memory space, file descriptors, and global variables, but each maintains its own stack, program counter, and set of registers.
+## Introduction
 
----
-
-### **Advantages of Using Threads**
-
-- **Responsiveness**: Multithreading enables a program to remain responsive even if some threads are blocked or performing lengthy operations.
-- **Resource Sharing**: Threads share the same address space, facilitating efficient communication and data sharing between them.
-- **Performance**: On multi-core processors, threads can execute simultaneously on different cores, leading to improved performance through parallelism.
-- **Scalability**: Multithreaded applications can handle increasing workloads more effectively by distributing tasks across multiple threads.
+Memory ordering is a concept in multi-threaded programming. Ir refers to the sequence in which read and write operations to shared memory are executed and observed in a multi-threaded program. Modern processors and compilers may reorder instructions for performance optimization, potentially leading to inconsistencies in concurrent programs.
 
 ---
 
-### **POSIX Threads (pthreads) Library**
+## **The Basics of Memory Ordering**
 
-The POSIX standard defines a thread API known as **pthreads** for C/C++ programming. This API provides a set of functions for thread creation, management, and synchronization. It's widely supported on Unix-like systems, including Linux and macOS.
+### **Reordering and Visibility**
+
+- **Compiler Reordering**: Compilers may rearrange instructions to optimize performance.
+- **Hardware Reordering**: CPUs may execute instructions out of order for efficiency.
+- **Visibility**: Threads may not see the same order of memory operations performed by another thread due to these reorderings.
+
+### **Race Conditions**
+
+- A **data race** occurs when:
+    - Two threads access the same memory location.
+    - At least one of the accesses is a write.
+    - No proper synchronization mechanism is used.
 
 ---
 
-### **Creating and Managing Threads**
+Memory orders in C specify the visibility and synchronization guarantees of atomic operations. They control how operations are ordered relative to others across threads.
 
-To work with threads in C, include the pthread library by adding `#include <pthread.h>` at the beginning of your program. When compiling, link the pthread library using the `-pthread` flag with `gcc`.
+*Atomic operations are basic actions in programming that happen all at once. They make sure data stays correct when multiple tasks use it at the same time, without needing extra locking tools.
 
-### **1. Creating a Thread**
+## **Atomic Operations in C11**
 
-Use `pthread_create` to initiate a new thread:
+The C11 standard provides a `<stdatomic.h>` library for atomic operations. These operations ensure that memory access is atomic and offer various levels of control over memory ordering.
+
+C11 introduces atomic types, e.g.:
 
 ```c
+#include <stdatomic.h>
+
+atomic_int shared_var; // An atomic integer
+
+```
+
+### **Atomic Functions**
+
+Examples of atomic functions:
+
+- `atomic_store`: Store a value atomically.
+- `atomic_load`: Load a value atomically.
+- `atomic_fetch_add`: Perform atomic addition.
+- `atomic_exchange`: Atomically swap values.
+
+Each of these functions can take a **memory order** parameter, defining the visibility and ordering constraints.
+
+![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/127bca41-dc65-4c96-b713-5125ca8f314d/78f79d00-bbd7-4ef3-a607-f8330710305b/image.png)
+
+### **Memory Orders: Overview**
+
+| **Memory Order** | **Description** |
+| --- | --- |
+| **`memory_order_relaxed`** | No synchronization or ordering guarantees. Suitable for non-critical operations where performance is more important.  |
+| **`memory_order_consume`** | Prevents reordering of dependent reads before the atomic operation. |
+| **`memory_order_acquire`** | Blocks reordering of memory operations before the atomic operation. |
+| **`memory_order_release`** | Blocks reordering of memory operations after the atomic operation. |
+| **`memory_order_acq_rel`** | Combines `acquire` and `release` semantics. Prevents reordering before and after the atomic. |
+| **`memory_order_seq_cst`** | Provides the strongest guarantees with a total ordering across all threads. |
+
+### Comparison of Memory Orders
+
+| **Memory Order** | Reordering Allowed	 | Synchronization |
+| --- | --- | --- |
+| **`memory_order_relaxed`** | Yes | No |
+| **`memory_order_consume`** | Limited (dependencies)	 | Partial |
+| **`memory_order_acquire`** | No reorder after	 | Read synchronization |
+| **`memory_order_release`** | No reorder before	 | Write synchronization |
+| **`memory_order_acq_rel`** | No reorder (bidirectional)	 | Synchronizes reads and writes |
+| **`memory_order_seq_cst`** | No reorder globally	 | Total order synchronization |
+
+### Exemple of usage
+
+```c
+atomic_store_explicit(&shared_var, 42, memory_order_relaxed);
+```
+
+### **Programming Example**
+
+### **Programming Example**
+
+The following example demonstrates how to use memory orders in C with atomic operations:
+
+```c
+#include <stdatomic.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-void* thread_function(void* arg) {
-    // Thread code here
+atomic_int shared_data = 0;
+
+void* producer(void* arg) {
+    // Store data with release semantics
+    atomic_store_explicit(&shared_data, 42, memory_order_release);
+    return NULL;
+}
+
+void* consumer(void* arg) {
+    // Load data with acquire semantics
+    int value = atomic_load_explicit(&shared_data, memory_order_acquire);
+    printf("Read value: %d\n", value);
     return NULL;
 }
 
 int main() {
-    pthread_t thread;
-    int result;
+    pthread_t t1, t2;
 
-    result = pthread_create(&thread, NULL, thread_function, NULL);
-    if (result != 0) {
-        fprintf(stderr, "Error creating thread\n");
-        return EXIT_FAILURE;
-    }
+    pthread_create(&t1, NULL, producer, NULL);
+    pthread_create(&t2, NULL, consumer, NULL);
 
-    // Wait for the thread to finish
-    pthread_join(thread, NULL);
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
 
-    return EXIT_SUCCESS;
+    return 0;
 }
-
 ```
 
-- **Parameters**:
-    - `pthread_t *thread`: Pointer to the thread identifier.
-    - `const pthread_attr_t *attr`: Thread attributes (use `NULL` for default settings).
-    - `void *(*start_routine)(void *)`: Function to be executed by the thread.
-    - `void *arg`: Argument passed to the thread function.
+### **Explanation**:
 
-### **2. Waiting for a Thread to Finish**
+- The producer writes to `data` and sets `ready` with `memory_order_release`, ensuring `data` is visible to consumers before `ready` is set.
+- The consumer waits for `ready` with `memory_order_acquire`, ensuring all preceding writes are visible before proceeding.
 
-Use `pthread_join` to wait for a thread's termination:
+# **How Memory Orders Work at the Processor Level**
 
-```c
-pthread_join(thread, NULL);
+## **Processor Memory Models**
 
-```
+Each architecture defines its own memory model:
 
-- **Parameters**:
-    - `pthread_t thread`: Thread identifier.
-    - `void **retval`: Pointer to the return value of the thread (use `NULL` if not needed).
-
-### **3. Terminating a Thread**
-
-A thread can terminate by returning from its start function or by calling `pthread_exit`:
-
-```c
-pthread_exit(NULL);
-
-```
-
-- **Note**: `pthread_exit` allows other threads to continue execution; calling `exit` would terminate all threads in the process.
+- **x86 (Intel/AMD)**: Strong ordering; most memory operations are observed in the order written, but explicit memory barriers (`mfence`, `lfence`, `sfence`) are available for stricter control.
+- **ARM/PowerPC**: Relaxed ordering; significant reordering is allowed. Memory barriers (e.g., `dmb`) are essential to enforce order.
+- **RISC-V**: Configurable memory model with both relaxed and sequentially consistent options, using `fence` instructions for ordering.
 
 ---
 
-### **Thread Synchronization**
+## **Common Hardware Reorderings**
 
-Proper synchronization is crucial to prevent race conditions and ensure data consistency when multiple threads access shared resources.
+Processors may reorder:
 
-### **1. Mutexes**
+- **Store-Store**: Two writes may be swapped.
+- **Load-Load**: Two reads may be swapped.
+- **Load-Store**: A read before a write may be swapped.
+- **Store-Load**: A write before a read can be reordered, often requiring barriers to prevent.
 
-A **mutex** (mutual exclusion) ensures that only one thread accesses a critical section at a time.
+---
 
-- **Initializing a Mutex**:
-    
-    ```c
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-    
-    ```
-    
-- **Locking and Unlocking a Mutex**:
-    
-    ```
-    pthread_mutex_lock(&mutex);
-    // Critical section
-    pthread_mutex_unlock(&mutex);
-    
-    ```
-    
-- **Destroying a Mutex**:
-    
-    ```
-    pthread_mutex_destroy(&mutex);
-    ```
-    
+## **Memory Barriers**
 
-### **2. Condition Variables**
+Memory barriers (fences) prevent reordering of specific types of operations:
 
-Condition variables allow threads to wait for certain conditions to be met.
+- **Load Barrier**: Ensures reads before the barrier complete first.
+- **Store Barrier**: Ensures writes before the barrier complete first.
+- **Full Barrier**: Enforces both read and write order.
 
-- **Declaring and Initializing**:
-    
-    ```
-    pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-    
-    ```
-    
-- **Waiting a Condition**:
-    
-    ```
-    pthread_mutex_lock(&mutex);
-    pthread_cond_wait(&cond, &mutex);
-    // Condition met
-    pthread_mutex_unlock(&mutex);
-    
-    ```
-    
-- **Signaling a Condition**:
-    
-    ```
-    pthread_cond_signal(&cond);
-    
-    ```
-    
-- **Destroying a Condition Variable**:
-    
-    ```
-    pthread_cond_destroy(&cond);
-    
-    ```
-    
+Example:
 
-### **Example: Incrementing a Shared Counter**
+- ARM: `asm volatile ("dmb ish" ::: "memory");`
+- x86: `asm volatile ("mfence" ::: "memory");`
 
-Here's an example demonstrating multiple threads incrementing a shared counter with proper synchronization:
+---
+
+## **Processor and Compiler Interactions**
+
+Both compilers and CPUs reorder instructions:
+
+- **Compiler Reordering**: Optimizes code during compilation.
+- **CPU Reordering**: Occurs at runtime for hardware efficiency.
+
+### Solution:
+
+Use C11 atomic operations (`stdatomic.h`) with memory order constraints:
+
+- `memory_order_acquire/release`: Prevent critical reordering.
+- `memory_order_relaxed`: Allows reordering but ensures atomicity.
+
+---
+
+## **Example: Avoiding Issues**
 
 ```c
-#include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#define NUM_THREADS 5
-#define NUM_INCREMENTS 100000
-
-int counter = 0;
-pthread_mutex_t counter_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-void* increment_counter(void* arg) {
-    for (int i = 0; i < NUM_INCREMENTS; i++) {
-        pthread_mutex_lock(&counter_mutex);
-        counter++;
-        pthread_mutex_unlock(&counter_mutex);
-    }
-    return NULL;
+x = 1;
+atomic_store_explicit(&y, 1, memory_order_release);
+if (atomic_load_explicit(&y, memory_order_acquire)) {
+    printf("%d\n", x); // Guaranteed to see x = 1
 }
-
-int main() {
-    pthread_t threads[NUM_THREADS];
-
-    // Create threads
-    for (int i = 0; i < NUM_THREADS; i++) {
-        if (pthread_create(&threads[i], NULL, increment_counter, NULL) != 0) {
-            fprintf(stderr, "Error creating thread\n");
-            return EXIT_FAILURE;
-        }
-    }
-
-    // Wait for all threads to finish
-    for (int i = 0; i < NUM_THREADS; i++) {
-        pthread_join(threads[i], NULL);
-    }
-
-    printf("Final counter value: %d\n", counter);
-
-    pthread_mutex_destroy(&counter_mutex);
-    return EXIT_SUCCESS;
-}
-
 ```
 
-References
+---
 
- https://cours.polymtl.ca/inf2610/documentation/notes/chap4.pdf
- Chatgpt4.o
+### **Practical Use Cases**
+
+**Relaxed Order:**
+
+- Ideal for performance-critical applications where threads do not rely on specific ordering.
+
+**Acquire/Release Order:**
+
+- Common in producer-consumer models where synchronization is critical.
+
+**Sequential Consistency:**
+
+- Necessary for applications requiring strict global ordering of operations.
+
+---
+
+### References
+
+https://www.educative.io/answers/what-is-memoryorder-in-chttps://developer.arm.com/documentation/102336/0100/Memory-orderinghttps://developer.arm.com/documentation/102336/0100/Memory-barriers
+chatgpt4.o
