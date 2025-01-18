@@ -8,15 +8,15 @@
     - [x] linker
     - [x] types de threads et leur utilisation en c
     - [x] memory ordering
-- [ ]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
-- [ ]  DOC PART 1
+- [x]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
+- [x]  DOC PART 1
 
 ### **Partie 2 : Développement technique**
 
 **Configurer l'environnement ( à ajouter au readme) :**
 
 - Installer et configurer les outils nécessaires:
-    - [ ]  GCC (version du compilateur)
+    - [x]  GCC (version du compilateur)
     - [ ]  Valgrind
     - [ ]  Thread Sanitizer
 - [ ]  Préparer un espace de travail structuré avec des fichiers `.c` séparés pour chaque module. + les définir
