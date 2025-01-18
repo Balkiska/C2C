@@ -51,7 +51,7 @@ Examples of atomic functions:
 
 Each of these functions can take a **memory order** parameter, defining the visibility and ordering constraints.
 
-![image.png](https://prod-files-secure.s3.us-west-2.amazonaws.com/127bca41-dc65-4c96-b713-5125ca8f314d/78f79d00-bbd7-4ef3-a607-f8330710305b/image.png)
+![image](https://github.com/user-attachments/assets/23ba5688-c0fb-49a3-8acb-bf43559a8a2b)
 
 ### **Memory Orders: Overview**
 
