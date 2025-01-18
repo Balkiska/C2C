@@ -1,3 +1,5 @@
+# Threads in C
+
 Threads in C allow you to create **concurrent tasks** within a program. 
 
 Multithreading allows a program to perform multiple tasks concurrently, enhancing performance, especially on multi-core systems. Threads within the same process share resources such as memory space, file descriptors, and global variables, but each maintains its own stack, program counter, and set of registers.
