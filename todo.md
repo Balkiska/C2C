@@ -7,7 +7,7 @@
     - [x] LD_Preload
     - [x] linker
     - [x] types de threads et leur utilisation en c
-    - [ ] memory ordering
+    - [x] memory ordering
 - [ ]  Renseignement sur Valgrind,Thread Sanitizer et l’exfiltration de fichiers sur linux
 - [ ]  DOC PART 1
 
