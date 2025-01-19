@@ -19,8 +19,8 @@
     - [x]  GCC (version du compilateur)
     - [x]  Valgrind
     - [x]  Thread Sanitizer
-- [ ]  Préparer un espace de travail structuré avec des fichiers `.c` séparés pour chaque module. + les définir
-- [ ]  Initialiser un dépôt Git.
+- [x]  Préparer un espace de travail structuré avec des fichiers `.c` séparés pour chaque module. + les définir
+- [x]  Initialiser un dépôt Git.
 - [ ]  Ajouter un Makefile pour compiler et organiser facilement le code + flags de compilation .
 
 **Module de création du malware:** 
