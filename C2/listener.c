@@ -14,6 +14,8 @@ Socket programming is a way of connecting two nodes on a network to communicate 
 #include <netinet/in.h> 
 #define PORT 22 //port ssh
 
+
+
 int main(int argc, char const* argv[])
 {
     int server, new_socket; //server_fd int variable storing the file descriptor of the socket created.| new_socket creation of the socket
@@ -23,14 +25,14 @@ int main(int argc, char const* argv[])
     char* test = "";
 
     //socket descriptor, an integer (like a file handle)| AF_INET because we are using IPV4 | SOCK_STREAM: TCP (because we want to be shure on the victims receiving our  requests) | 0 because it is for IP
-    if ((server = int sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        perror("socket has failed");
+        if ((server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        perror("socket creation has failed");
         exit(EXIT_FAILURE);
     }
     
 
     // Prevents error such as: “address already in use”.
-    if (setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))); {
+    if (setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         perror("socket has failed");
         exit(EXIT_FAILURE);
     }
@@ -40,8 +42,7 @@ int main(int argc, char const* argv[])
 
 
     //  binds the socket to the address and port number specified in addr(custom data structure).
-    if (bind(server(struct sockaddr*)&address, sizeof (address))
-            < 0) {
+    if (bind(server, (struct sockaddr*)&address, sizeof(address)) < 0) {
         perror("bind has failed");
         exit(EXIT_FAILURE);
     }
@@ -50,16 +51,14 @@ int main(int argc, char const* argv[])
         exit(EXIT_FAILURE);
     }
 
-    if ((new_socket  // extracts the first connection request on the queue of pending connections for the listening socket, sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket. At this point, the connection is established between client and server, and they are ready to transfer data.
-    int new_socket= connection(SOCK_STREAM, struct sockaddr *addr, socklen_t *addrlen);
-         = connection(server, (struct sockaddr*)&address,
-                  &addrlen))
-        < 0) {
-        perror("connection is established between client and server");
+    // extracts the first connection request on the queue of pending connections for the listening socket, sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket. At this point, the connection is established between client and server, and they are ready to transfer data.
+    if ((new_socket = accept(server, (struct sockaddr*)&address, &addrlen)) < 0) {
+        perror("Connection is established between client and server");
         exit(EXIT_FAILURE);
     }
     
-
+    // Read data from the client and print it
+    read(new_socket, buffer, sizeof(buffer));
     printf("%s\n", buffer);
     send(new_socket, test, strlen(test), 0);
     printf(" \n");
