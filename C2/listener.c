@@ -14,9 +14,24 @@ Socket programming is a way of connecting two nodes on a network to communicate 
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h> 
+#include <pthread.h>
 #define PORT 22 //port ssh
 
 
+void* handle_client(void* arg) {
+    int new_socket = *((int*)arg);
+    free(arg);
+
+    char buffer[1024] = {0};
+    char* response = "\n";
+
+    read(new_socket, buffer, sizeof(buffer));
+    printf(" %s\n", buffer);
+    send(new_socket, response, strlen(response), 0);
+
+    close(new_socket);
+    return NULL;
+}
 
 int main(int argc, char const* argv[])
 {
@@ -24,7 +39,7 @@ int main(int argc, char const* argv[])
     struct sockaddr_in address;
     int opt = 1;
     socklen_t addrlen = sizeof(address); //  represent the size of a network address structure 
-    char* test = "";
+
 
     //socket descriptor, an integer (like a file handle)| AF_INET because we are using IPV4 | SOCK_STREAM: TCP (because we want to be shure on the victims receiving our  requests) | 0 because it is for IP
         if ((server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -49,26 +64,32 @@ int main(int argc, char const* argv[])
         exit(EXIT_FAILURE);
     }
         if (listen(server, 3) < 0) {// puts the server socket in a passive mode, where it waits for the client to approach the server to make a connection. The backlog, defines the maximum length to which the queue of pending connections for sockfd may grow
-        perror("C2 is listening");
+        perror("C2 failed listening");
         exit(EXIT_FAILURE);
     }
+
+    printf("Server listening on port %d...\n", PORT);
 
     // extracts the first connection request on the queue of pending connections for the listening socket, sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket. At this point, the connection is established between client and server, and they are ready to transfer data.
-    if ((new_socket = accept(server, (struct sockaddr*)&address, &addrlen)) < 0) {
-        perror("Connection is established between client and server");
-        exit(EXIT_FAILURE);
-    }
-    
-    // Read data from the client and print it
-    read(new_socket, buffer, sizeof(buffer));
-    printf("%s\n", buffer);
-    send(new_socket, test, strlen(test), 0);
-    printf(" \n");
+    while (1) {
+        new_socket = malloc(sizeof(int));
+        if ((*new_socket = accept(server, (struct sockaddr*)&address, &addrlen)) < 0) {
+            perror("Accept failed");
+            free(new_socket);
+            continue;
+        }
 
-    // closing the connected socket
-    close(new_socket);
-    // closing the listening socket
+        printf("New client connected.\n");
+
+        pthread_t thread_id;
+        if (pthread_create(&thread_id, NULL, handle_client, (void*)new_socket) != 0) {
+            perror("pthread_create failed");
+            free(new_socket);
+        }
+
+        pthread_detach(thread_id);  // Allow thread to clean up after finishing
+    }
+
     close(server);
     return 0;
-
 }
