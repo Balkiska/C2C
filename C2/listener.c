@@ -10,6 +10,8 @@ Socket programming is a way of connecting two nodes on a network to communicate 
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h> 
 #define PORT 22 //port ssh
