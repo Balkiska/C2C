@@ -72,7 +72,7 @@ int main(int argc, char const* argv[])
 
     // extracts the first connection request on the queue of pending connections for the listening socket, sockfd, creates a new connected socket, and returns a new file descriptor referring to that socket. At this point, the connection is established between client and server, and they are ready to transfer data.
     while (1) {
-        new_socket = malloc(sizeof(int));
+        int *new_socket = (int *)malloc(sizeof(int));
         if ((*new_socket = accept(server, (struct sockaddr*)&address, &addrlen)) < 0) {
             perror("Accept failed");
             free(new_socket);
@@ -87,7 +87,7 @@ int main(int argc, char const* argv[])
             free(new_socket);
         }
 
-        pthread_detach(thread_id);  // Allow thread to clean up after finishing
+        pthread_detach(thread_id);  //allow thread to clean up after finishing
     }
 
     close(server);
