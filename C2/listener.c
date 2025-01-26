@@ -1,12 +1,18 @@
-/* References:
-https://www.geeksforgeeks.org/socket-programming-cc/
-https://man7.org/linux/man-pages/man7/socket.7.html
-https://man7.org/linux/man-pages/man2/socket.2.html
-https://man7.org/linux/man-pages/man2/bind.2.html
-https://tala-informatique.fr/index.php?title=C_socket
+/*Test the code :
 
-Help:
-Socket programming is a way of connecting two nodes on a network to communicate with each other. */ 
+gcc listener.c -o server -pthread
+sudo ./server
+On another terminal -> nc 127.0.0.1 22
+
+*notifiction "New client connected."
+You can now write anything you want from one to the other terminal. 
+
+On a third terminal -> nc 127.1.1.1 22
+
+*notifiction "New client connected."
+You can now write anything you want from one to the other terminal.
+
+*/
 
 #include <stdlib.h>
 #include <stdio.h>
