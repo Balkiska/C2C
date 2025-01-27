@@ -19,40 +19,29 @@ SRC_C2 = $(SRC_DIR_C2)/add_ssh.c \
          $(SRC_DIR_C2)/user_interface.c \
          $(SRC_DIR_C2)/main.c
 
-# Source files for the Malware component
-SRC_MALWARE = $(SRC_DIR_MALWARE)/connect.c \
-              $(SRC_DIR_MALWARE)/hide.c \
-              $(SRC_DIR_MALWARE)/main.c
+# Executables
+C2_EXEC = c2_executable
 
-# Default target: build both executables
-all: $(C2_EXEC) $(MALWARE_EXEC)
+# Default target: build C2 executable
+all: $(C2_EXEC)
 
-# Compile the C2 component
-$(C2_EXEC): $(OBJ_C2)
-	$(CC) $(CFLAGS) -o $@ $^
+$(C2_EXEC): $(SRC_C2:.c=.o)
+	$(CC) $(CFLAGS) -o $(C2_EXEC) $(SRC_C2:.c=.o)
 
-# Compile the Malware component
-$(MALWARE_EXEC): $(OBJ_MALWARE)
-	$(CC) $(CFLAGS) -o $@ $^
+# Compile the database program separately
+database: $(SRC_DIR_C2)/database.c $(SRC_DIR_C2)/main.c
+	$(CC) $(CFLAGS) -o database $(SRC_DIR_C2)/database.c $(SRC_DIR_C2)/main.c
 
-# Generate object files from source files
-OBJ_C2 = $(SRC_C2:.c=.o)
-OBJ_MALWARE = $(SRC_MALWARE:.c=.o)
-
-# Rule to compile source files into object files
+# Rule to compile object files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean object files and executables
+# Clean generated files
 clean:
-	rm -f $(OBJ_C2) $(OBJ_MALWARE) $(C2_EXEC) $(MALWARE_EXEC)
+	rm -f $(SRC_DIR_C2)/*.o $(C2_EXEC) database
 
-# Clean everything including backup files
-fclean: clean
-	rm -f *~ *.bak
+# Run the database executable
+run_database:
+	./database
 
-# Recompile everything from scratch
-re: fclean all
-
-# Prevents conflicts with files named as the targets
-.PHONY: all clean fclean re
+.PHONY: all clean run_database

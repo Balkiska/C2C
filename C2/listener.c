@@ -12,6 +12,8 @@ On a third terminal -> nc 127.1.1.1 22
 *notifiction "New client connected."
 You can now write anything you want from one to the other terminal.
 
+
+help for me: https://goteleport.com/blog/ssh-port-knocking/
 */
 
 #include <stdlib.h>
@@ -21,8 +23,32 @@ You can now write anything you want from one to the other terminal.
 #include <sys/socket.h>
 #include <netinet/in.h> 
 #include <pthread.h>
+#include <arpa/inet.h>
+#include <time.h>
 #define PORT 22 //port ssh
 
+
+/*-----------
+Port knocking
+-----------*/
+
+#define MAX_CLIENTS 666
+#define SEQUENCE_LEN 5
+
+int port_knocking_sequence[SEQUENCE_LEN] = {222222, 22222, 2222, 222, 22}; 
+
+struct PortKnockingState {
+    char ip[INET_ADDRSTRLEN];
+    int sequence_index;
+    time_t last_knock;
+};
+
+struct PortKnockingState clients[MAX_CLIENTS];
+int client_count = 0;
+
+/*--------------------------
+Thread containing the socket
+--------------------------*/
 
 void* handle_client(void* arg) {
     int new_socket = *((int*)arg);
