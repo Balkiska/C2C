@@ -3,17 +3,26 @@
 gcc listener.c -o server -pthread
 sudo ./server
 On another terminal -> nc 127.0.0.1 22
+*should not work : error message "Connection refused for 127.0.0.1 (port not unlocked)."
 
+                ->  nc 127.0.0.1 1111
+                    nc 127.0.0.1 11
+                    nc 127.0.0.1 2222
+                    nc 127.0.0.1 222
+                    nc 127.0.0.1 22
 *notifiction "New client connected."
 You can now write anything you want from one to the other terminal. 
 
-On a third terminal -> nc 127.1.1.1 22
+On a third terminal->   nc 127.0.0.1 1111
+                        nc 127.0.0.1 11
+                        nc 127.0.0.1 2222
+                        nc 127.0.0.1 222
+                        nc 127.0.0.1 22
 
 *notifiction "New client connected."
-You can now write anything you want from one to the other terminal.
+You can now write anything you want from one to the third terminal.
 
 
-help for me: https://goteleport.com/blog/ssh-port-knocking/
 */
 
 #include <stdlib.h>
@@ -35,16 +44,54 @@ Port knocking
 #define MAX_CLIENTS 666
 #define SEQUENCE_LEN 5
 
-int port_knocking_sequence[SEQUENCE_LEN] = {222222, 22222, 2222, 222, 22}; 
+int port_knocking_sequence[SEQUENCE_LEN] = {1111, 11, 2222, 222, 22}; 
 
 struct PortKnockingState {
     char ip[INET_ADDRSTRLEN];
-    int sequence_index;
-    time_t last_knock;
+    int sequence;
+    time_t last_knocking;
+    int unlocked;
 };
 
 struct PortKnockingState clients[MAX_CLIENTS];
 int client_count = 0;
+
+//manage the port knocking sequence
+void process_knocking(const char *ip, int port) {
+    time_t now = time(NULL);
+
+    for (int i = 0; i < client_count; i++) {
+        if (strcmp(clients[i].ip, ip) == 0) {
+            if (clients[i].unlocked) {
+                printf("Port already unlocked for %s\n", ip);
+                return;
+            }
+            if (port == port_knocking_sequence[clients[i].sequence]) {
+                if (now - clients[i].last_knocking > 5) {
+                    clients[i].sequence = 0;  // Reset if needed
+                }
+                clients[i].sequence++;
+
+                if (clients[i].sequence == SEQUENCE_LEN) {
+                    printf("SCorrect sequence received from %s\n", ip);
+                    printf("SSH port is unlocked for %s\n", ip);
+                    clients[i].unlocked = 1; // port open for this ip
+                    clients[i].sequence = 0;  // Reinitialize
+                }
+                clients[i].last_knocking = now;
+            } else {
+                clients[i].sequence = 0;  // Reset if wrong port
+            }
+            return;
+        }
+    }
+    //for a new client
+    strcpy(clients[client_count].ip, ip);
+    clients[client_count].sequence = (port == port_knocking_sequence[0]) ? 1 : 0;
+    clients[client_count].last_knocking = now;
+    clients[client_count].unlocked = 0;
+    client_count++;
+}
 
 /*--------------------------
 Thread containing the socket
@@ -111,6 +158,29 @@ int main(int argc, char const* argv[])
             continue;
         }
 
+        //retrieve IP address and check knocking
+        char client_ip[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &address.sin_addr, client_ip, INET_ADDRSTRLEN);
+        int client_port = ntohs(address.sin_port);
+
+        process_knocking(client_ip, client_port);
+
+        // checks if the IP is unlocked before doing the connection
+        int is_unlocked = 0;
+        for (int i = 0; i < client_count; i++) {
+            if (strcmp(clients[i].ip, client_ip) == 0 && clients[i].unlocked) {
+                is_unlocked = 1;
+                break;
+            }
+        }
+
+        if (!is_unlocked) {
+            printf("Connection refused for %s (port not unlocked).\n", client_ip);
+            close(*new_socket);
+            free(new_socket);
+            continue; 
+        }
+        
         printf("New client connected.\n");
 
         pthread_t thread_id;
