@@ -1,31 +1,28 @@
-#include "database.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <pthread.h>
+#include "listener.h"
+#include "server.h"
 
-int main() {
+int main(void) {
+    pthread_t listener_thread;
+    pthread_t ui_thread;
 
-    //DB
-    Credentials new_cred;
-    new_cred.id = generate_id();
-    strcpy(new_cred.ssh_key, "ssh-rsa AAAAB3...");
-    strcpy(new_cred.username, "victim_user");
-    strcpy(new_cred.password, "securepassword");
-    strcpy(new_cred.hostname, "victim.com");
+    //start the listener in a separate thread
+    if (pthread_create(&listener_thread, NULL, start_listener, NULL) != 0) {
+        perror("failed to create listener thread");
+        return 1;
+    }
 
-    save_credentials(&new_cred);
+    //start the UI thread
+    if (pthread_create(&ui_thread, NULL, start_server_ui, NULL) != 0) {
+        perror("Failed to create server UI thread");
+        return 1;
+    }
 
-    printf("Stored credentials:\n");
-    load_credentials();
-
-    printf("\nSearching for user 'victim_user':\n");
-    search_by_username("victim_user");
-
-    printf("\nDeleting ID 1:\n");
-    delete_by_id(1);
-
-    printf("\nCredentials after deletion:\n");
-    load_credentials();
+    //wait for threads to finish (in practice, they might run indefinitely ^^)
+    pthread_join(listener_thread, NULL);
+    pthread_join(ui_thread, NULL);
 
     return 0;
 }
