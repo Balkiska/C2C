@@ -10,7 +10,7 @@ SRCS = \
   Server/server.c \
   interface/server_ui.c
 
-.c -> .o
+# .c -> .o
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
