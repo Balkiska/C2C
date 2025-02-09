@@ -110,3 +110,9 @@ The hooking and port knocking examples are minimal and for educational use.
 ## Disclaimer
 
 This code is intended for **educational and testing purposes** in a controlled environment. Unauthorized usage on production or third-party systems is illegal and unethical. Use responsibly.
+
+## License
+
+This project is licensed under the 
+[Creative Commons Attribution-NonCommercial 4.0 International License](LICENSE).
+
